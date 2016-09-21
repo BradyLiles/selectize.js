@@ -123,6 +123,8 @@ $.extend(Selectize.prototype, {
 		var $dropdown;
 		var $dropdown_content;
 		var $dropdown_parent;
+		var $item_count_badge;
+		var $item_count_button;
 		var inputMode;
 		var timeout_blur;
 		var timeout_focus;
@@ -134,6 +136,21 @@ $.extend(Selectize.prototype, {
 		classes           = $input.attr('class') || '';
 
 		$wrapper          = $('<div>').addClass(settings.wrapperClass).addClass(classes).addClass(inputMode);
+
+		if(self.settings.showSelectedItemsCountButton)
+		{
+			var sic_wrap = $('<span>').addClass('input-group-btn').addClass(settings.selectedItemsCountClass);
+			$item_count_button = $('<button>').addClass('btn').addClass('btn-primary')
+									  .attr('data-delay', '375')
+									  .attr('data-container', 'body')
+									  .attr('data-toggle', 'popover')
+									  .attr('data-trigger', 'hover')
+									  .attr('data-placement', 'top')
+									  .attr('data-content', 'Test').appendTo(sic_wrap);
+			$item_count_badge = $('<span>').addClass('badge').appendTo($item_count_button);
+
+		}
+
 		$control          = $('<div>').addClass(settings.inputClass).addClass('items').appendTo($wrapper);
 		$control_input    = $('<input type="text" autocomplete="off" />').appendTo($control).attr('tabindex', $input.is(':disabled') ? '-1' : self.tabIndex);
 		$dropdown_parent  = $(settings.dropdownParent || $wrapper);
@@ -186,6 +203,8 @@ $.extend(Selectize.prototype, {
 		self.$control_input    = $control_input;
 		self.$dropdown         = $dropdown;
 		self.$dropdown_content = $dropdown_content;
+		self.$item_count_badge = $item_count_badge;
+		self.$item_count_button = $item_count_button;
 
 		$dropdown.on('mouseenter', '[data-selectable]', function() { return self.onOptionHover.apply(self, arguments); });
 		$dropdown.on('mousedown click', '[data-selectable]', function() { return self.onOptionSelect.apply(self, arguments); });
@@ -207,6 +226,17 @@ $.extend(Selectize.prototype, {
 			focus     : function() { self.ignoreBlur = false; return self.onFocus.apply(self, arguments); },
 			paste     : function() { return self.onPaste.apply(self, arguments); }
 		});
+
+
+		self.showOnlySelected = false;
+		if(self.settings.showSelectedItemsCountButton)
+		{
+			$item_count_button.click( function ( e )
+			{
+				self.showOnlySelected = !self.showOnlySelected;
+				self.refreshOptions();
+			} );
+		}
 
 		$document.on('keydown' + eventNS, function(e) {
 			self.isCmdDown = e[IS_MAC ? 'metaKey' : 'ctrlKey'];
@@ -251,6 +281,11 @@ $.extend(Selectize.prototype, {
 
 		$input.attr('tabindex', -1).hide().after(self.$wrapper);
 
+		if(self.settings.showSelectedItemsCountButton)
+		{
+			sic_wrap.insertAfter($wrapper);
+		}
+
 		if ($.isArray(settings.items)) {
 			self.setValue(settings.items);
 			delete settings.items;
@@ -269,6 +304,7 @@ $.extend(Selectize.prototype, {
 		self.refreshItems();
 		self.refreshState();
 		self.updatePlaceholder();
+		self.updateItemCountBadge();
 		self.isSetup = true;
 
 		if ($input.is(':disabled')) {
@@ -627,6 +663,15 @@ $.extend(Selectize.prototype, {
 	 */
 	onBlur: function(e, dest) {
 		var self = this;
+
+		if ( self.showSelectedItemsCountButton )
+		{
+			if ( self.showOnlySelected && !self.$item_count_button.is( ":hover" ) )
+			{
+				self.showOnlySelected = false;
+			}
+		}
+
 		if (!self.isFocused) return;
 		self.isFocused = false;
 
@@ -711,8 +756,13 @@ $.extend(Selectize.prototype, {
 			}
 		} else {
 			if (typeof value !== 'undefined') {
-				self.lastQuery = null;
-				self.setTextboxValue('');
+
+				if(self.settings.clearSearchAfterSelect)
+				{
+					self.lastQuery = null;
+					self.setTextboxValue('');
+				}
+
 				self.addItem(value);
 				if (self.settings.closeAfterSelect) {
 					self.close();
@@ -748,11 +798,13 @@ $.extend(Selectize.prototype, {
 	 * @param {function} fn
 	 */
 	load: function(fn) {
+
 		var self = this;
 		var $wrapper = self.$wrapper.addClass(self.settings.loadingClass);
 
 		self.loading++;
 		fn.apply(self, [function(results) {
+
 			self.loading = Math.max(self.loading - 1, 0);
 			if (results && results.length) {
 				self.addOption(results);
@@ -1101,7 +1153,22 @@ $.extend(Selectize.prototype, {
 					groups[optgroup] = document.createDocumentFragment();
 					groups_order.push(optgroup);
 				}
-				groups[optgroup].appendChild(option_html);
+
+				if(self.showOnlySelected && self.items.length == 0)
+				{
+					self.showOnlySelected = false;
+				}
+
+				if ( self.showOnlySelected )
+				{
+					if ( self.items.indexOf( option.value.toString() ) != -1 )
+					{
+						groups[optgroup].appendChild(option_html);
+					}
+				} else
+				{
+					groups[optgroup].appendChild(option_html);
+				}
 			}
 		}
 
@@ -1463,6 +1530,7 @@ $.extend(Selectize.prototype, {
 	 * @param {boolean} silent
 	 */
 	addItem: function(value, silent) {
+		console.log("add Item");
 		var events = silent ? [] : ['change'];
 
 		debounce_events(this, events, function() {
@@ -1519,6 +1587,7 @@ $.extend(Selectize.prototype, {
 				}
 
 				self.updatePlaceholder();
+				self.updateItemCountBadge();
 				self.trigger('item_add', value, $item);
 				self.updateOriginalInput({silent: silent});
 			}
@@ -1565,6 +1634,7 @@ $.extend(Selectize.prototype, {
 			self.refreshOptions();
 			self.refreshState();
 			self.updatePlaceholder();
+			self.updateItemCountBadge();
 			self.updateOriginalInput({silent: silent});
 			self.positionDropdown();
 			self.trigger('item_remove', value, $item);
@@ -1740,6 +1810,16 @@ $.extend(Selectize.prototype, {
 		}
 	},
 
+
+	updateItemCountBadge: function() {
+		if(this.settings.showSelectedItemsCountButton)
+		{
+			var itemCountBadge = this.$item_count_badge;
+			var itemCountButton = this.$item_count_button;
+			itemCountButton.attr("data-content", this.items.length + " Items Selected");
+			itemCountBadge.html(this.items.length);
+		}
+	},
 	/**
 	 * Shows/hide the input placeholder depending
 	 * on if there items in the list already.
@@ -1825,6 +1905,7 @@ $.extend(Selectize.prototype, {
 		self.setCaret(0);
 		self.setActiveItem(null);
 		self.updatePlaceholder();
+		self.updateItemCountBadge();
 		self.updateOriginalInput({silent: silent});
 		self.refreshState();
 		self.showInput();
@@ -2112,7 +2193,12 @@ $.extend(Selectize.prototype, {
 				self.renderCache[templateName] = {};
 			}
 			if (self.renderCache[templateName].hasOwnProperty(value)) {
-				return self.renderCache[templateName][value];
+				var cachedValue = self.renderCache[templateName][value];
+				if(templateName == 'option')
+				{
+					$(cachedValue).removeClass("selected");
+				}
+				return cachedValue;
 			}
 		}
 
@@ -2133,7 +2219,7 @@ $.extend(Selectize.prototype, {
 
 		// update cache
 		if (cache) {
-			//self.renderCache[templateName][value] = html[0];
+			self.renderCache[templateName][value] = html[0];
 		}
 
 		return html[0];

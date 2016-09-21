@@ -21,8 +21,10 @@ Selectize.defaults = {
 	preload: false,
 	allowEmptyOption: false,
 	closeAfterSelect: false,
+	clearSearchAfterSelect: true,
 	renderItems		 : true,
 	deselectItemsFromDropdown : false,
+	showSelectedItemsCountButton : false,
 
 	scrollDuration: 60,
 	loadThrottle: 300,
@@ -41,6 +43,7 @@ Selectize.defaults = {
 	searchConjunction: 'and',
 
 	mode: null,
+	selectedItemsCountClass: 'selectize-selected-items-count',
 	wrapperClass: 'selectize-control',
 	inputClass: 'selectize-input',
 	dropdownClass: 'selectize-dropdown',

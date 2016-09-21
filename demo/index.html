@@ -13,8 +13,6 @@
 
     <style>
 
-
-
         .input-group .selectize-control {
             /* Align Selectize with input-group-btn */
             top: 2px;
@@ -30,7 +28,7 @@
             border-top-right-radius: 0;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
-            padding: 7px 8px !important;
+            padding: 6px 8px !important;
         }
 
 
@@ -57,7 +55,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="form-group" style="width:360px">
+            <div class="form-group" style="width:460px">
                 <div class="input-group">
                     <span class="input-group-btn" data-toggle="buttons">
                         <label class="btn btn-default">
@@ -68,11 +66,6 @@
                         </label>
                     </span>
                     <select multiple id="select1"></select>
-                    <span class="input-group-btn">
-                        <button type="button" class="btn btn-primary" data-delay="375" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="14 Items Selected">
-                            <span class="badge">14</span>
-                        </button>
-                    </span>
                 </div>
             </div>
         </div>
@@ -139,21 +132,22 @@
 <script>
     $(function () {
         $('[data-toggle="popover"]').popover()
-    })
+    });
 
     var getOptionsAsync = function ( callback, selectize )
     {
 
         console.log("get options async");
-        //remove dummie options
         var selectedItems = selectize.items;
-        if ( selectize && selectedItems )
+
+        selectize.clearOptions();
+       /* if ( selectize && selectedItems )
         {
             for ( var i = 0; i < selectedItems.length; i++ )
             {
                 selectize.removeOption( selectedItems[i] );
             }
-        }
+        }*/
 
         //get data
         var data = [
@@ -174,14 +168,14 @@
         ];
 
         callback( data );
+
         if ( selectize && selectedItems )
         {
             selectedItems.forEach( function ( dataItem )
             {
-                selectize.addItem( dataItem.value );
+                selectize.addItem( dataItem );
             } );
         }
-
     };
 
     var initOptions = function ( selectize )
@@ -204,12 +198,12 @@
 
         renderItems: false,
         deselectItemsFromDropdown: true,
+        clearSearchAfterSelect: false,
+        showSelectedItemsCountButton: true,
 
         placeholder: "(Select One)",
-
         hideSelected: false,
         preload: 'focus',
-        showSelectedItemsCount: true,
         placeholder: 'asdf',
         render: {
             custom: function ( data, escape )
@@ -223,6 +217,7 @@
         },
         load: function ( query, callback )
         {
+            this.settings.load = null;
             getOptionsAsync( callback, this );
         },
 
@@ -230,6 +225,7 @@
         {
             initOptions( this );
         }
+
     } )[0].selectize;
 
     var dropdownInstance2 = $( '#select2' ).selectize( {
