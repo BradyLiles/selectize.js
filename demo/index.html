@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+
+    <link rel="stylesheet" href="/dist/css/selectize.bootstrap3.css" type="text/css">
+
+    <script src="/dist/js/standalone/selectize.js" type="text/javascript" ></script>
+
+    <style>
+
+
+
+        .input-group .selectize-control {
+            /* Align Selectize with input-group-btn */
+            top: 2px;
+        }
+
+        .input-group .selectize-control > .selectize-dropdown {
+            top: 34px;
+        }
+
+        /* Reset right rounded corners, see Bootstrap input-groups.less */
+        .input-group > .selectize-control > .selectize-input {
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            padding: 7px 8px !important;
+        }
+
+
+        .input-group-btn .active .glyphicon-check {
+            display: inline-block !important;
+        }
+
+        .input-group-btn .active .glyphicon-unchecked, .input-group-btn .glyphicon-check {
+            display: none !important;
+        }
+
+
+
+
+    </style>
+</head>
+<body>
+<div style="height:60px;"></div><div><button onclick="GetValue()">Get Value</button><button onclick="AddOptions()">Add Options</button></div>
+<div class="container">
+
+
+
+    <hr>
+
+    <div class="container">
+        <div class="row">
+            <div class="form-group" style="width:360px">
+                <div class="input-group">
+                    <span class="input-group-btn" data-toggle="buttons">
+                        <label class="btn btn-default">
+                            <input type="checkbox" name="options" id="option2" autocomplete="off">
+                            <span class="glyphicon glyphicon-check"></span>
+                            <span class="glyphicon glyphicon-unchecked"></span>
+                            Active
+                        </label>
+                    </span>
+                    <select multiple id="select1"></select>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-primary" data-delay="375" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="14 Items Selected">
+                            <span class="badge">14</span>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="form-group" style="width:360px">
+                <label class="label">Selectize</label>
+                <select style="" multiple id="select2">
+                    <option value="1">Value 1</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="form-group" style="width:360px">
+                <label class="label">Selectize</label>
+                <select style="" multiple id="select3">
+                    <option value="1">Value 1</option>
+                    <option value="2">Value 2</option>
+                    <option value="3">Value 3</option>
+                    <option value="4">Value 4</option>
+                    <option value="5">Value 5</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<style>
+    body {
+        background-color: slategray;
+    }
+
+    .selectize-dropdown .selected {
+        background-color: dimgray;
+        font: bold;
+        color: white;
+    }
+
+    .selectize-dropdown-content i {
+        display: none;
+        line-height: 18px;
+    }
+
+    .selectize-dropdown-content .selected i {
+        display: block;
+    }
+
+    .custom-field {
+        position: absolute;
+        right: 0;
+        line-height: 0;
+    }
+
+    .selectize-custom-field {
+        margin-top: -20px;
+        text-align: right;
+    }
+
+</style>
+<script>
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
+
+    var getOptionsAsync = function ( callback, selectize )
+    {
+
+        console.log("get options async");
+        //remove dummie options
+        var selectedItems = selectize.items;
+        if ( selectize && selectedItems )
+        {
+            for ( var i = 0; i < selectedItems.length; i++ )
+            {
+                selectize.removeOption( selectedItems[i] );
+            }
+        }
+
+        //get data
+        var data = [
+            // Values from AgentCubed.LIB.Core.Utilities, enum DateRangeType
+            // The order below is from the pre-PortalV5 implementation;
+            // it is likely that the users are accustomed to this order.
+            { text: "Daily (Yesterday)", value: 7 },
+            { text: "Weekly (Previous Week - Sun through Sat)", value: 8 },
+            { text: "Weekly (Current Week - Sun through Sat)", value: 1 },
+            { text: "Monthly (Previous Calendar Month)", value: 9 },
+            { text: "Monthly (Current Calendar Month)", value: 2 },
+            { text: "Quarterly (Previous Quarter)", value: 10 },
+            { text: "Quarterly (Current Quarter)", value: 3 },
+            { text: "Annual (Previous Calendar Year)", value: 11 },
+            { text: "Annual (Current Calendar Year)", value: 4 },
+            { text: "[Static] Date Range (Never Changes)", value: 5 },
+            { text: "[Dynamic] Date Range (Auto Adjust)", value: 6 },
+        ];
+
+        callback( data );
+        if ( selectize && selectedItems )
+        {
+            selectedItems.forEach( function ( dataItem )
+            {
+                selectize.addItem( dataItem.value );
+            } );
+        }
+
+    };
+
+    var initOptions = function ( selectize )
+    {
+        setTimeout( function ()
+        {
+            var data = [
+                { value: 7 },
+                { value: 8 }
+            ];
+            data.forEach( function ( dataItem )
+            {
+                selectize.addOption( dataItem );
+                selectize.addItem( dataItem.value );
+            } );
+        }, 0 );
+    };
+
+    var dropdownInstance1 = $( '#select1' ).selectize( {
+
+        renderItems: false,
+        deselectItemsFromDropdown: true,
+
+        placeholder: "(Select One)",
+
+        hideSelected: false,
+        preload: 'focus',
+        showSelectedItemsCount: true,
+        placeholder: 'asdf',
+        render: {
+            custom: function ( data, escape )
+            {
+                return '<div><label>' + this.items.length + ' items selected</label>&nbsp;<i class="fa fa-question-circle fa-lg" aria-hidden="true" title="View Selected" ></i></div>';
+            },
+            option: function ( item, escape )
+            {
+                return '<div>' + item.text + '<div style="float:right"><i class="fa fa-minus-circle" aria-hidden="true"></i></div></div>'
+            }
+        },
+        load: function ( query, callback )
+        {
+            getOptionsAsync( callback, this );
+        },
+
+        onInitialize: function ( )
+        {
+            initOptions( this );
+        }
+    } )[0].selectize;
+
+    var dropdownInstance2 = $( '#select2' ).selectize( {
+        hideSelected: false,
+        cache: false,
+        placeholder: "(Select many)",
+        preload: 'focus',
+        load: function ( query, callback )
+        {
+            getOptionsAsync( callback, this );
+        },
+        render: {
+            option: function ( item, escape )
+            {
+                return '<div>' + item.text + '</div>'
+            }
+        }
+    } )[0].selectize;
+
+
+    var dropdownInstance3 = $( '#select3' ).selectize( {
+
+        placeholder: "(Select One)",
+        mode: 'single',
+        maxItems: 1,
+        render: {
+            option: function ( item, escape )
+            {
+                return '<div>' + item.text + '</div>'
+            }
+        },
+    } )[0].selectize;
+
+</script>

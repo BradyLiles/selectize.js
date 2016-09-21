@@ -53,5 +53,14 @@
   },
   "engines": {
     "node": "*"
+  },
+  "bugs": {
+    "url": "https://github.com/selectize/selectize.js/issues"
+  },
+  "homepage": "https://github.com/selectize/selectize.js#readme",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
   }
 }

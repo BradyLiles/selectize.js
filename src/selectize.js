@@ -48,6 +48,8 @@ var Selectize = function($input, settings) {
 		userOptions      : {},
 		items            : [],
 		renderCache      : {},
+		renderItems		 : true,
+		deselectItemsFromDropdown : false,
 		onSearchChange   : settings.loadThrottle === null ? self.onSearchChange : debounce(self.onSearchChange, settings.loadThrottle)
 	});
 
@@ -688,14 +690,26 @@ $.extend(Selectize.prototype, {
 		}
 
 		$target = $(e.currentTarget);
+
+		var value = $target.attr('data-value');
+
 		if ($target.hasClass('create')) {
 			self.createItem(null, function() {
 				if (self.settings.closeAfterSelect) {
 					self.close();
 				}
 			});
+		} else if ( self.settings.deselectItemsFromDropdown && self.items.indexOf(value) !== -1 )
+		{
+			if (typeof value !== 'undefined') {
+				self.removeItem( value );
+				if (self.settings.closeAfterSelect) {
+					self.close();
+				} else if (!self.settings.hideSelected && e.type && /mouse/.test(e.type)) {
+					self.setActiveOption(self.getOption(value));
+				}
+			}
 		} else {
-			value = $target.attr('data-value');
 			if (typeof value !== 'undefined') {
 				self.lastQuery = null;
 				self.setTextboxValue('');
@@ -1463,14 +1477,23 @@ $.extend(Selectize.prototype, {
 				return;
 			}
 
+
+
 			if (!self.options.hasOwnProperty(value)) return;
 			if (inputMode === 'single') self.clear(silent);
 			if (inputMode === 'multi' && self.isFull()) return;
 
-			$item = $(self.render('item', self.options[value]));
 			wasFull = self.isFull();
+
+			//Rendering this to keep item_add event working.
+			$item = $(self.render('item', self.options[value]));
+
+			if ( self.settings.renderItems ) {
+				self.insertAtCaret($item);
+			}
+
 			self.items.splice(self.caretPos, 0, value);
-			self.insertAtCaret($item);
+
 			if (!self.isPending || (!wasFull && self.isFull())) {
 				self.refreshState();
 			}
@@ -1509,18 +1532,24 @@ $.extend(Selectize.prototype, {
 	 * @param {string} value
 	 */
 	removeItem: function(value, silent) {
+		console.log("removeItem");
 		var self = this;
 		var $item, i, idx;
 
 		$item = (value instanceof $) ? value : self.getItem(value);
-		value = hash_key($item.attr('data-value'));
+		value = self.settings.renderItems ? hash_key($item.attr('data-value')) : value;
+
 		i = self.items.indexOf(value);
 
 		if (i !== -1) {
-			$item.remove();
-			if ($item.hasClass('active')) {
-				idx = self.$activeItems.indexOf($item[0]);
-				self.$activeItems.splice(idx, 1);
+
+			if(self.settings.renderItems)
+			{
+				$item.remove();
+				if ($item.hasClass('active')) {
+					idx = self.$activeItems.indexOf($item[0]);
+					self.$activeItems.splice(idx, 1);
+				}
 			}
 
 			self.items.splice(i, 1);
@@ -1533,6 +1562,7 @@ $.extend(Selectize.prototype, {
 				self.setCaret(self.caretPos - 1);
 			}
 
+			self.refreshOptions();
 			self.refreshState();
 			self.updatePlaceholder();
 			self.updateOriginalInput({silent: silent});
@@ -1718,7 +1748,7 @@ $.extend(Selectize.prototype, {
 		if (!this.settings.placeholder) return;
 		var $input = this.$control_input;
 
-		if (this.items.length) {
+		if ( this.items.length && this.settings.renderItems ) {
 			$input.removeAttr('placeholder');
 		} else {
 			$input.attr('placeholder', this.settings.placeholder);
@@ -2103,7 +2133,7 @@ $.extend(Selectize.prototype, {
 
 		// update cache
 		if (cache) {
-			self.renderCache[templateName][value] = html[0];
+			//self.renderCache[templateName][value] = html[0];
 		}
 
 		return html[0];
