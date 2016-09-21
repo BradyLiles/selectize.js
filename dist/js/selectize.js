@@ -1984,7 +1984,6 @@ $.extend(Selectize.prototype, {
 	 * @param {boolean} silent
 	 */
 	addItem: function(value, silent) {
-		console.log("add Item");
 		var events = silent ? [] : ['change'];
 
 		debounce_events(this, events, function() {
@@ -2055,7 +2054,6 @@ $.extend(Selectize.prototype, {
 	 * @param {string} value
 	 */
 	removeItem: function(value, silent) {
-		console.log("removeItem");
 		var self = this;
 		var $item, i, idx;
 
